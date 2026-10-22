@@ -11,41 +11,18 @@ import org.springframework.web.filter.OncePerRequestFilter
 /**
  * `FORCE_SSL=true` in production (C4, 70-security-and-config.md "TLS"). Rails turns on `assume_ssl` and `force_ssl` together:
  * `ActionDispatch::AssumeSSL` marks every request as HTTPS (TLS terminates at the reverse proxy), so absolute URLs use
- * `https://`; `ActionDispatch::SSL` then sends HSTS and flags cookies `Secure`. A request that is still plain HTTP (only
- * possible without assume_ssl) is redirected 301 to HTTPS; `/up` is never redirected.
+ * `https://`; `ActionDispatch::SSL` then sends HSTS and flags cookies `Secure`. Because every request already counts as HTTPS,
+ * the SSL middleware's HTTP→HTTPS redirect never fires in Ruby, so there is none here either (no redirect loop behind a proxy
+ * that sends no `X-Forwarded-Proto`).
  */
-class TransportSecurityFilter(
-    private val assumeSsl: Boolean = true,
-) : OncePerRequestFilter() {
+class TransportSecurityFilter : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         chain: FilterChain,
     ) {
-        val req = if (assumeSsl) AssumeSslRequest(request) else request
-        if (!req.isSecure && !WebPaths.isUp(req)) {
-            redirectToHttps(req, response)
-            return
-        }
         response.setHeader(HSTS_HEADER, HSTS_VALUE)
-        chain.doFilter(req, SecureCookiesResponse(response))
-    }
-
-    private fun redirectToHttps(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-    ) {
-        val query = request.queryString?.let { "?$it" }.orEmpty()
-        val status =
-            if (request.method == "GET" || request.method == "HEAD") {
-                HttpServletResponse.SC_MOVED_PERMANENTLY
-            } else {
-                PERMANENT_REDIRECT
-            }
-        response.status = status
-        response.setHeader("Location", "https://${request.serverName}${request.requestURI}$query")
-        response.contentType = HtmlErrorPages.HTML_UTF8
-        response.setContentLength(0)
+        chain.doFilter(AssumeSslRequest(request), SecureCookiesResponse(response))
     }
 
     private class AssumeSslRequest(
@@ -75,6 +52,5 @@ class TransportSecurityFilter(
         /** `ActionDispatch::SSL` default: 2 years, include subdomains, no preload. */
         const val HSTS_VALUE = "max-age=63072000; includeSubDomains"
         private const val HTTPS_PORT = 443
-        private const val PERMANENT_REDIRECT = 308
     }
 }

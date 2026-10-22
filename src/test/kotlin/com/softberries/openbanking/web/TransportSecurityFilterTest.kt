@@ -34,27 +34,15 @@ class TransportSecurityFilterTest {
     }
 
     @Test
-    fun `a plain HTTP request without assume_ssl is redirected to HTTPS, GET with 301 and other verbs with 308`() {
-        val get = MockHttpServletRequest("GET", "/admin/analytics").apply { serverName = "finance.example.com" }
-        get.queryString = "from=2026-01-01"
-        val getResponse = MockHttpServletResponse()
-        TransportSecurityFilter(assumeSsl = false).doFilter(get, getResponse, MockFilterChain())
-
-        getResponse.status shouldBe 301
-        getResponse.getHeader("Location") shouldBe "https://finance.example.com/admin/analytics?from=2026-01-01"
-
-        val post = MockHttpServletRequest("POST", "/admin/categories").apply { serverName = "finance.example.com" }
-        val postResponse = MockHttpServletResponse()
-        TransportSecurityFilter(assumeSsl = false).doFilter(post, postResponse, MockFilterChain())
-        postResponse.status shouldBe 308
-    }
-
-    @Test
-    fun `up is never redirected`() {
+    fun `there is no HTTPS redirect - assume_ssl makes even the liveness probe count as HTTPS`() {
+        val request = MockHttpServletRequest("GET", "/up").apply { serverName = "finance.example.com" }
         val response = MockHttpServletResponse()
+        val chain = MockFilterChain()
 
-        TransportSecurityFilter(assumeSsl = false).doFilter(MockHttpServletRequest("GET", "/up"), response, MockFilterChain())
+        TransportSecurityFilter().doFilter(request, response, chain)
 
         response.status shouldBe 200
+        chain.request!!.isSecure shouldBe true
+        chain.request!!.scheme shouldBe "https"
     }
 }
