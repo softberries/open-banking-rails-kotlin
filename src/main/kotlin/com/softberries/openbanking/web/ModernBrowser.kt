@@ -29,25 +29,25 @@ object ModernBrowser {
     fun isBlocked(userAgent: String?): Boolean {
         if (userAgent.isNullOrBlank() || bot.containsMatchIn(userAgent)) return false
         val (browser, version) = classify(userAgent) ?: return false
-        if (browser == Browser.IE) return true
-        return version < minimumVersions.getValue(browser)
+        return browser == Browser.IE || version < minimumVersions.getValue(browser)
     }
+
+    private val guarded =
+        listOf(
+            Browser.OPERA to opera,
+            Browser.OPERA to operaPresto,
+            Browser.FIREFOX to firefox,
+            Browser.CHROME to chrome,
+            Browser.SAFARI to safari,
+        )
 
     private fun classify(ua: String): Pair<Browser, Version>? {
         ie.find(ua)?.let { m -> return Browser.IE to Version.parse(m.groupValues.drop(1).first { it.isNotEmpty() }) }
+        // Edge (Chromium UA plus `Edg/`) is not in the :modern list, so it is never blocked.
         if (edge.containsMatchIn(ua)) return null
-        val guarded =
-            listOf(
-                Browser.OPERA to opera,
-                Browser.OPERA to operaPresto,
-                Browser.FIREFOX to firefox,
-                Browser.CHROME to chrome,
-                Browser.SAFARI to safari,
-            )
-        for ((browser, pattern) in guarded) {
-            pattern.find(ua)?.let { return browser to Version.parse(it.groupValues[1]) }
+        return guarded.firstNotNullOfOrNull { (browser, pattern) ->
+            pattern.find(ua)?.let { browser to Version.parse(it.groupValues[1]) }
         }
-        return null
     }
 
     /** `UserAgent::Version` comparison: numeric segments, missing segments count as 0. */

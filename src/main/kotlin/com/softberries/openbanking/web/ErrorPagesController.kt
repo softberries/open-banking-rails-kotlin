@@ -4,6 +4,7 @@ import jakarta.servlet.RequestDispatcher
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.web.servlet.error.ErrorController
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Controller
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping
  * and Spring's binding errors → 400, CSRF failure → 422, anything else → 500.
  */
 @Controller
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 class ErrorPagesController(
     private val pages: HtmlErrorPages,
 ) : ErrorController {

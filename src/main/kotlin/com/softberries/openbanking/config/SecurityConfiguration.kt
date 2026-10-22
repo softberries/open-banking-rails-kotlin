@@ -14,8 +14,9 @@ import org.springframework.security.web.SecurityFilterChain
  * Filter chains, most specific first. Servlet filters in front of them (CORS, host check, SSL, headers, `_method`, browser
  * gate) are registered in [com.softberries.openbanking.web.WebConfiguration]. Later units add chains between [HEALTH_ORDER]
  * and [FALLBACK_ORDER] and start each with [WebSecurityConventions.apply].
+ *
+ * Not loaded for `db:migrate` (no web server).
  */
-// Not loaded for `db:migrate` (no web server).
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 class SecurityConfiguration {

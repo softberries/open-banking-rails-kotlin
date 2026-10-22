@@ -61,7 +61,11 @@ class WebConfiguration {
 
     /** C6: `POST` + `_method=patch|put|delete` (any case) is dispatched as that verb, before Spring Security sees it. */
     @Bean
-    fun hiddenHttpMethodFilter(): OrderedHiddenHttpMethodFilter = OrderedHiddenHttpMethodFilter().apply { order = FilterOrder.METHOD_OVERRIDE }
+    fun hiddenHttpMethodFilter(): OrderedHiddenHttpMethodFilter =
+        OrderedHiddenHttpMethodFilter().apply {
+            order =
+                FilterOrder.METHOD_OVERRIDE
+        }
 
     @Bean
     fun browserGateFilter(

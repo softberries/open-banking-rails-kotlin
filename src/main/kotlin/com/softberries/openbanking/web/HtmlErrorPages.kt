@@ -2,6 +2,7 @@ package com.softberries.openbanking.web
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component
  * Statuses without a page (e.g. 403, 405) get an empty body.
  */
 @Component
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 class HtmlErrorPages {
     private val pages: Map<Int, ByteArray> =
         mapOf(
@@ -80,8 +82,8 @@ class HtmlErrorPages {
         fun json(status: Int): ByteArray = """{"status":$status,"error":"${reason(status)}"}""".toByteArray()
 
         fun wantsJson(request: HttpServletRequest): Boolean {
-            val accept = request.getHeader(HttpHeaders.ACCEPT)?.takeIf { it.isNotBlank() } ?: return false
-            if (BROWSER_LIKE_ACCEPTS.containsMatchIn(accept)) return false
+            val accept = request.getHeader(HttpHeaders.ACCEPT)
+            if (accept.isNullOrBlank() || BROWSER_LIKE_ACCEPTS.containsMatchIn(accept)) return false
             val first =
                 try {
                     MediaType.parseMediaTypes(accept).sortedByDescending { it.qualityValue }.firstOrNull()

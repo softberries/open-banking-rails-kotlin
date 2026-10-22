@@ -1,8 +1,10 @@
 package com.softberries.openbanking.web
 
+import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletRequestWrapper
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.web.servlet.error.ErrorController
 import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.stereotype.Component
@@ -18,6 +20,7 @@ import org.springframework.web.util.ServletRequestPathUtils
  * [routed] / [unrouted] to keep that order. Method mismatches count as unrouted (Rails: routing error).
  */
 @Component
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 class ApplicationRoutes(
     @Qualifier("requestMappingHandlerMapping") private val mapping: RequestMappingHandlerMapping,
 ) {
@@ -43,7 +46,7 @@ class ApplicationRoutes(
             try {
                 mapping.getHandler(probe)?.handler as? HandlerMethod
             } catch (
-                @Suppress("TooGenericExceptionCaught") e: Exception,
+                @Suppress("SwallowedException") e: ServletException,
             ) {
                 // 405/406/415 lookups: the path exists but not for this request; Rails has no route for it either.
                 null

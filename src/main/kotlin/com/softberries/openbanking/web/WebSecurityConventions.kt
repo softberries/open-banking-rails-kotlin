@@ -1,6 +1,7 @@
 package com.softberries.openbanking.web
 
 import jakarta.servlet.DispatcherType
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.web.access.AccessDeniedHandler
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Component
  *   writers (which would send `no-store` and `X-Frame-Options: DENY`) are off; `/logout` is not a Rails route.
  */
 @Component
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 class WebSecurityConventions(
     private val routes: ApplicationRoutes,
 ) {

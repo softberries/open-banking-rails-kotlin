@@ -38,8 +38,15 @@ are allowed only where `migration-spec/docs/decisions.md` records them (deviatio
 
 - `/up` (`health.web.UpController.PATH`) is a liveness probe. It must stay public and stateless, and touch no database. Any later filter or interceptor
   (first-run `/setup` redirect, modern-browser gate, host authorization, SSL redirect) must exclude it.
-- Every request outside `/up` is denied until the authentication units add their own `SecurityFilterChain` beans (order them before the
-  fallback chain, which uses `@Order(Int.MAX_VALUE)`).
+- Servlet filters run in Rails middleware order before Spring Security (`web.WebConfiguration`): CORS → host check → assume SSL/HSTS →
+  Rails default headers and `Cache-Control` → `_method` override → modern-browser gate. Router-level controllers that Rails does not run
+  through `ApplicationController` are annotated `@SkipBrowserGate`.
+- Every new `SecurityFilterChain` starts with `WebSecurityConventions.apply(http)` (CSRF with `authenticity_token` / `X-CSRF-Token` → 422,
+  unrouted requests and error dispatches permitted so they keep their 404, Spring's header writers and `/logout` off), then adds its URL rules.
+  Order it before the fallback chain (`@Order(Int.MAX_VALUE)`), which keeps every routed request closed.
+- Error responses are the Ruby static pages (`src/main/resources/public/*.html`, `web.HtmlErrorPages`) in every profile, never a stack trace.
+  Throw `web.RecordNotFoundException` (404) and `web.ParameterMissingException` (400); anything else unhandled is a 500 page.
+- `PATCH` and `PUT` on the same path map to one handler: `@RequestMapping(method = [RequestMethod.PATCH, RequestMethod.PUT])`.
 
 ## Tests
 

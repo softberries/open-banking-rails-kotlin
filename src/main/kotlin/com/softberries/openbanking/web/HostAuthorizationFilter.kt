@@ -26,12 +26,20 @@ class HostAuthorizationFilter(
         chain: FilterChain,
     ) {
         val host = request.getHeader(HttpHeaders.HOST) ?: request.serverName
-        val forwarded = request.getHeader(X_FORWARDED_HOST)?.split(Regex(""",\s?"""))?.lastOrNull()?.takeIf { it.isNotBlank() }
+        val forwarded =
+            request
+                .getHeader(X_FORWARDED_HOST)
+                ?.split(Regex(""",\s?"""))
+                ?.lastOrNull()
+                ?.takeIf { it.isNotBlank() }
         if (allows(host) && (forwarded == null || allows(forwarded))) {
             chain.doFilter(request, response)
             return
         }
-        log.error("[ActionDispatch::HostAuthorization::DefaultResponseApp] Blocked hosts: {}", listOfNotNull(host, forwarded).joinToString())
+        log.error(
+            "[ActionDispatch::HostAuthorization::DefaultResponseApp] Blocked hosts: {}",
+            listOfNotNull(host, forwarded).joinToString(),
+        )
         response.status = HttpServletResponse.SC_FORBIDDEN
         response.contentType = HtmlErrorPages.HTML_UTF8
         response.setContentLength(0)

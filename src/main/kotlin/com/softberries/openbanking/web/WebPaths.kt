@@ -8,7 +8,6 @@ object WebPaths {
     const val API_PREFIX = "/api/"
     const val MCP = "/mcp"
 
-
     fun path(request: HttpServletRequest): String = request.requestURI.removePrefix(request.contextPath).ifEmpty { "/" }
 
     fun isUp(request: HttpServletRequest): Boolean = path(request) == UP

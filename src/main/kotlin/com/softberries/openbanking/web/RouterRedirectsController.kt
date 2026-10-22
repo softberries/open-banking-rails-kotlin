@@ -2,6 +2,7 @@ package com.softberries.openbanking.web
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping
  * built from the request's scheme, host and non-default port, and an empty `text/html` body.
  */
 @Controller
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @SkipBrowserGate
 class RouterRedirectsController {
     @GetMapping(ROOT)
