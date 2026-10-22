@@ -17,7 +17,6 @@ class HtmlErrorPagesTest {
         value = [
             "400 | The server cannot process the request due to a client error (400 Bad Request)",
             "404 | The page you were looking for doesn't exist (404 Not found)",
-            "406 | Your browser is not supported (406 Not Acceptable)",
             "422 | The change you wanted was rejected (422 Unprocessable Entity)",
             "500 | We're sorry, but something went wrong (500 Internal Server Error)",
         ],
@@ -27,6 +26,20 @@ class HtmlErrorPagesTest {
         expectedTitle: String,
     ) {
         title(String(pages.page(status)!!)) shouldBe expectedTitle
+    }
+
+    @Test
+    fun `the 406 page belongs to the browser gate only`() {
+        val gate = MockHttpServletResponse()
+        pages.renderUnsupportedBrowser(gate)
+        gate.status shouldBe 406
+        title(gate.contentAsString) shouldBe "Your browser is not supported (406 Not Acceptable)"
+
+        val other = MockHttpServletResponse()
+        pages.render(MockHttpServletRequest(), other, 406)
+        other.status shouldBe 406
+        other.contentAsByteArray.size shouldBe 0
+        other.contentType shouldBe HtmlErrorPages.HTML_UTF8
     }
 
     @ParameterizedTest
@@ -58,6 +71,7 @@ class HtmlErrorPagesTest {
     @Test
     fun `JSON body uses the Rack reason phrases`() {
         String(HtmlErrorPages.json(404)) shouldBe """{"status":404,"error":"Not Found"}"""
+        String(HtmlErrorPages.json(413)) shouldBe """{"status":413,"error":"Content Too Large"}"""
         String(HtmlErrorPages.json(422)) shouldBe """{"status":422,"error":"Unprocessable Content"}"""
         String(HtmlErrorPages.json(500)) shouldBe """{"status":500,"error":"Internal Server Error"}"""
     }
