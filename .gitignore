@@ -28,3 +28,7 @@ out/
 # Kotlin
 *.kt.orig
 .kotlin/
+
+# Local runtime artefacts
+backups/
+VERSION
