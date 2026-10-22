@@ -1,6 +1,8 @@
 package com.softberries.openbanking.health.web
 
 import com.softberries.openbanking.config.SecurityConfiguration
+import com.softberries.openbanking.web.ApplicationRoutes
+import com.softberries.openbanking.web.WebSecurityConventions
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,7 +15,7 @@ import javax.sql.DataSource
 
 /** `/up` must answer without any database (liveness, U-522): this slice has no DataSource at all. */
 @WebMvcTest(UpController::class)
-@Import(SecurityConfiguration::class)
+@Import(SecurityConfiguration::class, WebSecurityConventions::class, ApplicationRoutes::class)
 class UpControllerNoDatabaseTest {
     @Autowired
     private lateinit var mvc: MockMvc
@@ -38,7 +40,7 @@ class UpControllerNoDatabaseTest {
     }
 
     @Test
-    fun `other paths stay closed until authentication is configured`() {
-        mvc.get("/admin").andExpect { status { isForbidden() } }
+    fun `paths without a route are not blocked by security and keep their 404`() {
+        mvc.get("/admin/does-not-exist").andExpect { status { isNotFound() } }
     }
 }
