@@ -1,5 +1,6 @@
 package com.softberries.openbanking.health.web
 
+import com.softberries.openbanking.web.SkipBrowserGate
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController
  * so it answers 200 as soon as the application has booted.
  */
 @RestController
+@SkipBrowserGate
 class UpController {
     @GetMapping(PATH)
     fun show(response: HttpServletResponse) {
