@@ -264,6 +264,29 @@ class WebConventionsTest : IntegrationTest() {
         }
 
         @Test
+        fun `a known HTML path with another verb is a routing error - 404 page, no Allow header, no CSRF check`() {
+            val response = web.send("DELETE", "/test/html/form")
+
+            response.statusCode() shouldBe 404
+            title(response.body()) shouldBe "The page you were looking for doesn't exist (404 Not found)"
+            response.headers().firstValue("allow").isPresent shouldBe false
+            web.get("/test/html/form").statusCode() shouldBe 404
+        }
+
+        @Test
+        fun `the JSON API keeps 405 for another verb`() {
+            web.get("/api/test/echo").statusCode() shouldBe 405
+        }
+
+        @Test
+        fun `a 406 that is not the browser gate has an empty body`() {
+            val response = web.get("/test/html", mapOf("Accept" to "text/plain"))
+
+            response.statusCode() shouldBe 406
+            response.body() shouldBe ""
+        }
+
+        @Test
         fun `unmatched API paths answer 404`() {
             web.get("/api/v1/does-not-exist").statusCode() shouldBe 404
             web.send("DELETE", "/api/v1/merchants/1/nope").statusCode() shouldBe 404
