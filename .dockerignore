@@ -1,0 +1,7 @@
+.git
+.gradle
+build
+migration-spec
+backups
+*.iml
+.idea
