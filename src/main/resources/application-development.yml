@@ -1,0 +1,8 @@
+spring:
+  flyway:
+    out-of-order: true
+
+gg:
+  jte:
+    use-precompiled-templates: false
+    development-mode: true

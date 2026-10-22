@@ -1,0 +1,31 @@
+#!/bin/bash
+# One-shot migration runner for the compose `migrate` service (port of the Ruby bin/docker-migrate:15-18).
+# Order: pre-migration backup → Flyway migrate. On first boot there is nothing to dump; that is tolerated.
+# Assumes bin/docker-entrypoint already ran (secrets exported) and DATABASE_URL is set.
+
+set -e
+
+BACKUPS_DIR="${BACKUPS_DIR:-/rails/backups}"
+mkdir -p "$BACKUPS_DIR"
+
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "[migrate] DATABASE_URL not set; aborting" >&2
+  exit 1
+fi
+
+ts=$(date -u +%Y%m%dT%H%M%SZ)
+out="$BACKUPS_DIR/pre-migration-$ts.sql.gz"
+
+echo "[migrate] attempting pre-migration backup → $out"
+if pg_dump --clean --if-exists --no-owner --no-privileges "$DATABASE_URL" 2>/tmp/pg_dump.err | gzip > "$out"; then
+  size=$(stat -c '%s' "$out" 2>/dev/null || echo 0)
+  echo "[migrate] backup ok ($size bytes)"
+else
+  echo "[migrate] pre-migration backup skipped (likely first boot, db not yet provisioned)"
+  echo "[migrate] pg_dump stderr:" >&2
+  cat /tmp/pg_dump.err >&2 || true
+  rm -f "$out"
+fi
+
+echo "[migrate] running flyway migrate"
+exec java -jar /rails/app.jar db:migrate

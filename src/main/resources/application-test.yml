@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    # config/database.yml:28 — the test database name is fixed.
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/open_banking_rails_test
+  flyway:
+    out-of-order: true
+
+app:
+  time-zone: UTC

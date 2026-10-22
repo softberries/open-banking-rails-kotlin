@@ -1,0 +1,40 @@
+#!/bin/bash
+# Self-bootstrap entrypoint (same contract as the Ruby bin/docker-entrypoint:18-44).
+#
+# Reads or generates the secrets in $SECRETS_DIR (the `app_secrets` volume), exports them, then exec's the command.
+# ENV values set by the operator are never overwritten; the volume only fills the gaps. Idempotent.
+
+set -e
+
+SECRETS_DIR="${SECRETS_DIR:-/rails/secrets}"
+mkdir -p "$SECRETS_DIR"
+
+random_hex() {
+  # 32 random bytes as 64 hex characters (Ruby: SecureRandom.hex(32)).
+  od -An -tx1 -N32 /dev/urandom | tr -d ' \n'
+}
+
+bootstrap_secret() {
+  local file_name=$1
+  local var_name=$2
+  local file="$SECRETS_DIR/$file_name"
+
+  if [ -n "${!var_name:-}" ]; then
+    return 0
+  fi
+
+  if [ ! -s "$file" ]; then
+    (umask 077 && random_hex > "$file")
+    chmod 600 "$file" 2>/dev/null || true
+    echo "[entrypoint] generated $file_name"
+  fi
+
+  export "$var_name=$(cat "$file")"
+}
+
+bootstrap_secret "secret_key_base"                   "SECRET_KEY_BASE"
+bootstrap_secret "ar_encryption_primary_key"         "ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY"
+bootstrap_secret "ar_encryption_deterministic_key"   "ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY"
+bootstrap_secret "ar_encryption_key_derivation_salt" "ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT"
+
+exec "${@}"
