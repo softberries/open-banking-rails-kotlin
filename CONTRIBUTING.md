@@ -37,7 +37,7 @@ are allowed only where `migration-spec/docs/decisions.md` records them (deviatio
 ## Web
 
 - `/up` (`health.web.UpController.PATH`) is a liveness probe. It must stay public and stateless, and touch no database. Any later filter or interceptor
-  (first-run `/setup` redirect, modern-browser gate, host authorization, SSL redirect) must exclude it.
+  (first-run `/setup` redirect, modern-browser gate, host authorization) must exclude it.
 - Servlet filters run in Rails middleware order before Spring Security (`web.WebConfiguration`): CORS → host check → assume SSL/HSTS →
   Rails default headers and `Cache-Control` → `_method` override → modern-browser gate. Router-level controllers that Rails does not run
   through `ApplicationController` are annotated `@SkipBrowserGate`.

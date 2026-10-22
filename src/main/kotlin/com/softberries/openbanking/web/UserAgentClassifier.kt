@@ -3,21 +3,21 @@ package com.softberries.openbanking.web
 import com.softberries.openbanking.web.ModernBrowser.Version
 
 /** One `product/version (comment)` token of a User-Agent (`UserAgent` of the `useragent` gem). */
-data class UserAgentToken(
+internal data class UserAgentToken(
     val product: String,
     val version: Version,
     val comment: List<String>?,
 )
 
 /** What the gem reports for a User-Agent: `browser`, `version` and `bot?` of the selected browser extension. */
-data class DetectedBrowser(
+internal data class DetectedBrowser(
     val name: String?,
     val version: Version,
     val isBot: Boolean,
 )
 
 /** The parsed tokens (`UserAgent::Browsers::Base`) with the lookups the browser extensions share. */
-class UserAgentTokens(
+internal class UserAgentTokens(
     val agents: List<UserAgentToken>,
 ) {
     val first = agents.firstOrNull()
@@ -71,7 +71,7 @@ class UserAgentTokens(
  * order. Extensions that never name a guarded browser (media players, podcast apps) fall through to the base case, which names
  * the first product, as the gem does.
  */
-object UserAgentClassifier {
+internal object UserAgentClassifier {
     private class Extension(
         val matches: (UserAgentTokens) -> Boolean,
         val detect: (UserAgentTokens) -> DetectedBrowser,
