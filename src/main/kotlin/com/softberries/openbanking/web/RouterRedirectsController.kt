@@ -44,8 +44,6 @@ class RouterRedirectsController {
         const val ADMIN = "/admin"
         const val ADMIN_ANALYTICS = "/admin/analytics"
         const val CONTENT_TYPE = "text/html; charset=UTF-8"
-        private const val HTTP_PORT = 80
-        private const val HTTPS_PORT = 443
 
         /** Paths answered by this controller, public for everybody (Spring Security permits them). */
         val PATHS = arrayOf(ROOT, ADMIN)
@@ -53,11 +51,6 @@ class RouterRedirectsController {
         fun absolute(
             request: HttpServletRequest,
             path: String,
-        ): String {
-            val scheme = request.scheme
-            val port = request.serverPort
-            val standard = (scheme == "http" && port == HTTP_PORT) || (scheme == "https" && port == HTTPS_PORT)
-            return "$scheme://${request.serverName}${if (standard || port <= 0) "" else ":$port"}${request.contextPath}$path"
-        }
+        ): String = "${WebPaths.baseUrl(request)}${request.contextPath}$path"
     }
 }

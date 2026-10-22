@@ -21,7 +21,8 @@ import org.springframework.stereotype.Component
  *
  * - CSRF (C5): Rails parameter names (`authenticity_token` form field, `X-CSRF-Token` header, templates read the token
  *   from the `_csrf` request attribute for `<meta name="csrf-token">`); checked for non-GET requests that reach a
- *   controller, never for the JSON API (`/api/`) or `/mcp`; failure → 422 page (Spring's default would be 403).
+ *   controller, never for the JSON API (`/api/`) or `/mcp`; a foreign `Origin` fails like a bad token
+ *   ([RailsCsrfTokenRequestHandler]); failure → 422 page (Spring's default would be 403).
  * - Requests without a route and error dispatches are permitted, so they keep their 404 / error page for everybody (X-16);
  *   the router redirects `/` and `/admin` are public.
  * - Response headers come from [RailsResponseHeadersFilter] and [TransportSecurityFilter], so Spring Security's own header
@@ -47,6 +48,7 @@ class WebSecurityConventions(
         http
             .csrf { csrf ->
                 csrf.csrfTokenRepository(csrfTokenRepository())
+                csrf.csrfTokenRequestHandler(RailsCsrfTokenRequestHandler())
                 csrf.requireCsrfProtectionMatcher(csrfProtected)
             }.exceptionHandling { it.accessDeniedHandler(accessDeniedHandler) }
             .headers { it.disable() }

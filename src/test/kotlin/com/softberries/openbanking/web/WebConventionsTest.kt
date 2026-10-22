@@ -133,6 +133,18 @@ class WebConventionsTest : IntegrationTest() {
         }
 
         @Test
+        fun `a valid token from a foreign or null Origin is rejected like a bad token (forgery_protection_origin_check)`() {
+            val (cookie, token) = web.csrfSession()
+            val form = mapOf("authenticity_token" to token)
+
+            web.send("POST", "/test/html/form", mapOf("Cookie" to cookie, "Origin" to "https://evil.example"), form).statusCode() shouldBe
+                422
+            web.send("POST", "/test/html/form", mapOf("Cookie" to cookie, "Origin" to "null"), form).statusCode() shouldBe 422
+            web.send("POST", "/test/html/form", mapOf("Cookie" to cookie, "Origin" to "http://127.0.0.1:$port"), form).statusCode() shouldBe
+                200
+        }
+
+        @Test
         fun `CSRF does not apply to the JSON API or MCP`() {
             web.send("POST", "/api/test/echo").body() shouldBe "api"
             web.send("POST", "/mcp").statusCode() shouldBe 404
