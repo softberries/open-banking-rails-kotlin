@@ -86,6 +86,13 @@ class WebConventionsTest : IntegrationTest() {
         }
 
         @Test
+        fun `behind a TLS proxy the redirect uses the forwarded scheme and host`() {
+            val response = web.get("/", mapOf("X-Forwarded-Proto" to "https", "X-Forwarded-Host" to "finance.example.com"))
+
+            response.headers().firstValue("location").get() shouldBe "https://finance.example.com/admin"
+        }
+
+        @Test
         fun `redirects are not subject to the browser gate`() {
             web.get("/", mapOf("User-Agent" to IE11)).statusCode() shouldBe 301
         }
@@ -142,6 +149,16 @@ class WebConventionsTest : IntegrationTest() {
             web.send("POST", "/test/html/form", mapOf("Cookie" to cookie, "Origin" to "null"), form).statusCode() shouldBe 422
             web.send("POST", "/test/html/form", mapOf("Cookie" to cookie, "Origin" to "http://127.0.0.1:$port"), form).statusCode() shouldBe
                 200
+        }
+
+        @Test
+        fun `behind a TLS proxy the origin is compared with the forwarded scheme and host, as in Rails`() {
+            val (cookie, token) = web.csrfSession()
+            val proxy = mapOf("Cookie" to cookie, "X-Forwarded-Proto" to "https", "X-Forwarded-Host" to "finance.example.com")
+            val form = mapOf("authenticity_token" to token)
+
+            web.send("POST", "/test/html/form", proxy + ("Origin" to "https://finance.example.com"), form).statusCode() shouldBe 200
+            web.send("POST", "/test/html/form", proxy + ("Origin" to "http://finance.example.com"), form).statusCode() shouldBe 422
         }
 
         @Test

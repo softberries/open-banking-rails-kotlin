@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping
 /**
  * Router-level `redirect(...)` routes of `config/routes.rb` (`:158` root, `:48` admin root). They are not controllers in Rails,
  * so neither the browser gate, the first-run check nor authentication applies; they answer 301 with an absolute Location
- * built from the request's scheme, host and non-default port, and an empty `text/html` body.
+ * built from Rails' base URL ([RailsRequestUrl], proxy headers included), and an empty `text/html` body.
  */
 @Controller
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -51,6 +51,6 @@ class RouterRedirectsController {
         fun absolute(
             request: HttpServletRequest,
             path: String,
-        ): String = "${WebPaths.baseUrl(request)}${request.contextPath}$path"
+        ): String = "${RailsRequestUrl.baseUrl(request)}${request.contextPath}$path"
     }
 }

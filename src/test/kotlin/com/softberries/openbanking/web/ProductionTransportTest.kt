@@ -50,8 +50,9 @@ class ProductionTransportTest : IntegrationTest() {
         fun `requests are treated as HTTPS behind the proxy - absolute URLs use https and no redirect loop`() {
             val response = web.get("/")
 
+            // Rails keeps the port of the Host header (`url.rb:351`); behind a TLS proxy the Host has none.
             response.statusCode() shouldBe 301
-            response.headers().firstValue("location").get() shouldBe "https://127.0.0.1/admin"
+            response.headers().firstValue("location").get() shouldBe "https://127.0.0.1:$port/admin"
         }
 
         @Test
